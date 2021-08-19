@@ -1,3 +1,4 @@
+import logging
 import ffmpeg
 from utils.misc import load_object
 
@@ -88,6 +89,7 @@ class Pipeline:
 
     def __init__(self, settings):
         self.settings = settings
+        self.logger = logging.getLogger('maker.' + self.__class__.__qualname__)
 
     def process(self, infile, outfile, context):
         raise NotImplementedError()
@@ -107,6 +109,9 @@ class Pipeline:
         if kwargs['filename'] == 'pipe:':
             kwargs.update({'format': 'rawvideo', 'pix_fmt': 'rgb24'})
         output = ffmpeg.output(*streams_and_filename, **kwargs)
-        cmd = ffmpeg.compile(output)
-        print(cmd)
+
+        self.logger.debug(
+            'run command: "{}"'.format(' '.join(ffmpeg.compile(output)))
+        )
+
         return output
