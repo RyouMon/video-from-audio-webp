@@ -1,5 +1,5 @@
 import ffmpeg
-from utils import load_object
+from utils.misc import load_object
 
 
 class PipelineManager:
