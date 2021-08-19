@@ -89,7 +89,7 @@ class Pipeline:
     def __init__(self, settings):
         self.settings = settings
 
-    def process(self, infile, outfile, context=None):
+    def process(self, infile, outfile, context):
         raise NotImplementedError()
 
     def input(self, infile, **kwargs):
