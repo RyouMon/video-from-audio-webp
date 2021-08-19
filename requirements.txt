@@ -1,1 +1,3 @@
 ffmpeg-python==0.2.0
+autosub-baidu>=0.2.0
+i-need-an-image>=0.1.2
