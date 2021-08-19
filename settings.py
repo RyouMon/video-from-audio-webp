@@ -1,4 +1,6 @@
 
+THREAD_QUEUE_SIZE = 10000
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

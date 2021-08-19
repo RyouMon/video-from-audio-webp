@@ -97,7 +97,7 @@ class Pipeline:
     def input(self, infile, **kwargs):
         if infile == 'pipe:':
             kwargs.update({'format': 'rawvideo', 'pix_fmt': 'rgb24', 's': '1080x1920'})
-        return ffmpeg.input(infile, thread_queue_size=100, **kwargs)
+        return ffmpeg.input(infile, thread_queue_size=self.settings.THREAD_QUEUE_SIZE, **kwargs)
 
     def output(self, *streams_and_filename, **kwargs):
         streams_and_filename = list(streams_and_filename)
