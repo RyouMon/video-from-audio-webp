@@ -14,7 +14,7 @@ class SlideShowPipeline(Pipeline):
             image = image.filter('scale', w=1080, h=-1)
             video = video.overlay(image, y=600, enable=f'gt(t,{timestamps[0]})')
 
-        return self.output(video, context['a'], outfile), context
+        return self.output(video, outfile), context
 
     def get_subtitles(self, filename):
         return [
