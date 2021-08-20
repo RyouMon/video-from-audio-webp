@@ -78,6 +78,11 @@ class PipelineManager:
             subprocess.wait()
 
     def process(self, infile, outfile, context=None):
+
+        if context is None:
+            context = {}
+        context['infile'] = infile
+
         output_processes = self._prepare_processes(infile, outfile, context)
         subprocesses = self._run_processes(*output_processes)
         out, err = self._connect_processes(*subprocesses)
