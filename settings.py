@@ -1,3 +1,6 @@
+PIPELINES = [
+
+]
 
 OVERWRITE_OUTPUT = True
 
