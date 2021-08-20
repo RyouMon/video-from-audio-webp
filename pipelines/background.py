@@ -8,4 +8,4 @@ class BlackBackgroundPipeline(Pipeline):
         input_a = self.input(infile).audio
         context = {'a': input_a}
         input_v = ffmpeg.input('color=black:1080x1920', f='lavfi')
-        return self.output(input_v, input_a, outfile, y=None, acodec='aac', r=25, shortest=None), context
+        return self.output(input_v, input_a, outfile, acodec='aac', shortest=None), context
