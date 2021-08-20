@@ -8,6 +8,8 @@ FPS = 10
 
 THREAD_QUEUE_SIZE = 1000000
 
+DEFAULT_FONT_FILE = 'sample_files/msyh.ttc'
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
