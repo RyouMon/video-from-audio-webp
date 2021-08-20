@@ -91,13 +91,20 @@ class Pipeline:
         self.logger = logging.getLogger('maker.' + self.__class__.__qualname__)
         self.settings = settings
         self.overwrite_output = settings.OVERWRITE_OUTPUT
+        self.fps = settings.FPS
 
     def process(self, infile, outfile, context):
         raise NotImplementedError()
 
     def input(self, infile, **kwargs):
         if infile == 'pipe:':
-            kwargs.update({'format': 'rawvideo', 'pix_fmt': 'rgb24', 's': '1080x1920'})
+            kwargs.update({
+                'format': 'rawvideo',
+                'pix_fmt': 'rgb24',
+                'video_size': (1080, 1920),
+                'framerate': self.fps
+            })
+
         return ffmpeg.input(infile, thread_queue_size=self.settings.THREAD_QUEUE_SIZE, **kwargs)
 
     def output(self, *streams_and_filename, **kwargs):
@@ -108,7 +115,11 @@ class Pipeline:
             kwargs['filename'] = streams_and_filename.pop(-1)
 
         if kwargs['filename'] == 'pipe:':
-            kwargs.update({'format': 'rawvideo', 'pix_fmt': 'rgb24'})
+            kwargs.update({
+                'format': 'rawvideo',
+                'pix_fmt': 'rgb24',
+                'r': self.fps,
+            })
         output = ffmpeg.output(*streams_and_filename, **kwargs)
 
         if self.overwrite_output:
