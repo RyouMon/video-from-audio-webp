@@ -88,8 +88,9 @@ class PipelineManager:
 class Pipeline:
 
     def __init__(self, settings):
-        self.settings = settings
         self.logger = logging.getLogger('maker.' + self.__class__.__qualname__)
+        self.settings = settings
+        self.overwrite_output = settings.OVERWRITE_OUTPUT
 
     def process(self, infile, outfile, context):
         raise NotImplementedError()
@@ -109,6 +110,9 @@ class Pipeline:
         if kwargs['filename'] == 'pipe:':
             kwargs.update({'format': 'rawvideo', 'pix_fmt': 'rgb24'})
         output = ffmpeg.output(*streams_and_filename, **kwargs)
+
+        if self.overwrite_output:
+            output = output.overwrite_output()
 
         self.logger.debug(
             'run command: "{}"'.format(' '.join(ffmpeg.compile(output)))
