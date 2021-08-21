@@ -130,7 +130,7 @@ class Pipeline:
         if self.overwrite_output:
             output = output.overwrite_output()
 
-        self.logger.debug(
+        self.logger.info(
             'run command: "{}"'.format(' '.join(ffmpeg.compile(output)))
         )
 
