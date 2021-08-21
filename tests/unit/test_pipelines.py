@@ -113,44 +113,44 @@ class PipelineManagerTest(TestCase):
         processes = self.prepare_n_mocks(1)
         manager = pipelines.PipelineManager(*self.prepare_n_pipeline_mocks(1), settings=self.get_mock_settings())
 
-        subprocesses = manager._run_processes(*processes)
+        subprocesses = manager._run_processes(*processes, quiet=True)
 
         self.assertEqual(subprocesses, [process.run_async.return_value for process in processes])
-        processes[0].run_async.assert_called_once_with()
+        processes[0].run_async.assert_called_once_with(quiet=True)
 
     def test_run_two_processes(self):
         processes = self.prepare_n_mocks(2)
         manager = pipelines.PipelineManager(*self.prepare_n_pipeline_mocks(2), settings=self.get_mock_settings())
 
-        subprocesses = manager._run_processes(*processes)
+        subprocesses = manager._run_processes(*processes, quiet=True)
 
         self.assertEqual(subprocesses, [process.run_async.return_value for process in processes])
-        processes[0].run_async.assert_called_once_with(pipe_stdout=True)
-        processes[1].run_async.assert_called_once_with(pipe_stdin=True)
+        processes[0].run_async.assert_called_once_with(pipe_stdout=True, quiet=True)
+        processes[1].run_async.assert_called_once_with(pipe_stdin=True, quiet=True)
 
     def test_run_three_processes(self):
         processes = self.prepare_n_mocks(3)
         manager = pipelines.PipelineManager(*self.prepare_n_pipeline_mocks(3), settings=self.get_mock_settings())
 
-        subprocesses = manager._run_processes(*processes)
+        subprocesses = manager._run_processes(*processes, quiet=True)
 
         self.assertEqual(subprocesses, [process.run_async.return_value for process in processes])
-        processes[0].run_async.assert_called_once_with(pipe_stdout=True)
-        processes[1].run_async.assert_called_once_with(pipe_stdin=True, pipe_stdout=True)
-        processes[2].run_async.assert_called_once_with(pipe_stdin=True)
+        processes[0].run_async.assert_called_once_with(pipe_stdout=True, quiet=True)
+        processes[1].run_async.assert_called_once_with(pipe_stdin=True, pipe_stdout=True, quiet=True)
+        processes[2].run_async.assert_called_once_with(pipe_stdin=True, quiet=True)
 
     def test_run_ten_processes(self):
         processes = self.prepare_n_mocks(10)
         manager = pipelines.PipelineManager(*self.prepare_n_pipeline_mocks(10), settings=self.get_mock_settings())
 
-        subprocesses = manager._run_processes(*processes)
+        subprocesses = manager._run_processes(*processes, quiet=True)
 
         self.assertEqual(subprocesses, [process.run_async.return_value for process in processes])
-        processes[0].run_async.assert_called_once_with(pipe_stdout=True)
-        processes[-1].run_async.assert_called_once_with(pipe_stdin=True)
+        processes[0].run_async.assert_called_once_with(pipe_stdout=True, quiet=True)
+        processes[-1].run_async.assert_called_once_with(pipe_stdin=True, quiet=True)
 
         for process in processes[1:-1]:
-            process.run_async.assert_called_once_with(pipe_stdin=True, pipe_stdout=True)
+            process.run_async.assert_called_once_with(pipe_stdin=True, pipe_stdout=True, quiet=True)
 
     ################################
     # Test processes communication #

@@ -1,3 +1,5 @@
+DEBUG = False
+
 PIPELINES = [
 
 ]

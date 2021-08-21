@@ -8,6 +8,7 @@ class PipelineManager:
     def __init__(self, *pipelines, settings):
         self.pipelines = pipelines
         self.settings = settings
+        self.debug = settings.DEBUG
         self._size = len(pipelines)
 
     @classmethod
@@ -42,17 +43,17 @@ class PipelineManager:
 
         return processes
 
-    def _run_processes(self, *processes):
+    def _run_processes(self, *processes, quiet):
         """call run_async() on each output process"""
         if self._size == 1:
-            return [processes[0].run_async()]
+            return [processes[0].run_async(quiet=quiet)]
 
-        subprocesses = [processes[0].run_async(pipe_stdout=True)]
+        subprocesses = [processes[0].run_async(pipe_stdout=True, quiet=quiet)]
 
         for process in processes[1:-1]:
-            subprocesses.append(process.run_async(pipe_stdin=True, pipe_stdout=True))
+            subprocesses.append(process.run_async(pipe_stdin=True, pipe_stdout=True, quiet=quiet))
 
-        subprocesses.append(processes[-1].run_async(pipe_stdin=True))
+        subprocesses.append(processes[-1].run_async(pipe_stdin=True, quiet=quiet))
 
         return subprocesses
 
@@ -85,7 +86,7 @@ class PipelineManager:
         context['infile'] = infile
 
         output_processes = self._prepare_processes(infile, outfile, context)
-        subprocesses = self._run_processes(*output_processes)
+        subprocesses = self._run_processes(*output_processes, quiet=not self.debug)
         out, err = self._connect_processes(*subprocesses)
         code = self._wait_processes(*subprocesses)
         return code, out, err
