@@ -5,8 +5,9 @@ from utils.misc import load_object
 
 class PipelineManager:
 
-    def __init__(self, *pipelines):
+    def __init__(self, *pipelines, settings):
         self.pipelines = pipelines
+        self.settings = settings
         self._size = len(pipelines)
 
     @classmethod
@@ -19,7 +20,7 @@ class PipelineManager:
             pipeline_cls = load_object(cls_path)
             pipelines.append(pipeline_cls(settings))
 
-        return cls(*pipelines)
+        return cls(*pipelines, settings=settings)
 
     def _prepare_processes(self, infile, outfile, context):
         """call process on each pipeline"""
