@@ -12,4 +12,4 @@ class MaskingPipeline(Pipeline):
         video = video.overlay(mask, shortest=1)
         video = video.overlay(mask, y='H-600', shortest=1)
 
-        return self.output(video, audio, outfile), context
+        return self.output(video, audio, outfile, acodec='copy'), context

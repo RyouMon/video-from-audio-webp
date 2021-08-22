@@ -8,4 +8,4 @@ class SocialMediaBlackBackgroundPipeline(Pipeline):
         audio = self.input(infile).audio
 
         stream = ffmpeg.input('color=black:1080x1920', f='lavfi')
-        return self.output(stream, audio, outfile, shortest=None), context
+        return self.output(stream, audio, outfile, shortest=None, acodec='copy'), context

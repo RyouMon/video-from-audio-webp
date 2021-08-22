@@ -17,7 +17,7 @@ class DoubleTitlePipeline(Pipeline):
                 y=y,
             )
 
-        return self.output(video, audio, outfile), context
+        return self.output(video, audio, outfile, acodec='copy'), context
 
     @classmethod
     def add_arguments(cls, parser):
@@ -35,4 +35,4 @@ class SubtitlePipeline(Pipeline):
         audio = video.audio
 
         video = video.filter('subtitles', context.srt_file, force_style=context.force_style)
-        return self.output(video, audio, outfile), context
+        return self.output(video, audio, outfile, acodec='copy'), context

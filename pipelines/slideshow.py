@@ -19,7 +19,7 @@ class SlideShowPipeline(Pipeline):
             else:
                 video = video.overlay(image, y=600, enable=f'gt(t,{start})')
 
-        return self.output(video, audio, outfile), context
+        return self.output(video, audio, outfile, acodec='copy'), context
 
     def clean_slideshows(self, context):
         slideshows = context.slideshows
