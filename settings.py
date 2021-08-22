@@ -1,7 +1,11 @@
 DEBUG = False
 
 PIPELINES = [
-
+    'pipelines.background.SocialMediaBlackBackgroundPipeline',
+    'pipelines.slideshow.SlideShowPipeline',
+    'pipelines.masking.MaskingPipeline',
+    'pipelines.text.ContinuousTextPipeline',
+    'pipelines.text.SubtitlePipeline',
 ]
 
 OVERWRITE_OUTPUT = True
@@ -14,7 +18,7 @@ DEFAULT_FONT_FILE = 'sample_files/msyh.ttc'
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
+    'disable_existing_loggers': True,
     'handlers': {
         'console': {
             'level': 'DEBUG',
