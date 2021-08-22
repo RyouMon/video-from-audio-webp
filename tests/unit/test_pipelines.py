@@ -35,6 +35,7 @@ class PipelineManagerTest(TestCase):
     def test_from_settings(self, mock_load_object):
         # prepare mock load_object
         pipeline_classes = [MagicMock(), MagicMock(), MagicMock()]
+        parser = MagicMock()
         mock_load_object.side_effect = pipeline_classes
 
         # prepare settings module
@@ -42,19 +43,17 @@ class PipelineManagerTest(TestCase):
         settings = MagicMock()
         settings.PIPELINES = pipeline_paths
 
-        manager = pipelines.PipelineManager.from_settings(settings)
+        manager = pipelines.PipelineManager.from_settings(settings, parser)
 
         calls = [call('a'), call('b'), call('c')]
         mock_load_object.assert_has_calls(calls)
 
         for pipeline_cls in pipeline_classes:
             pipeline_cls.assert_called_once_with(settings)
+            pipeline_cls.add_arguments.assert_called_once_with(parser)
 
         for pipeline, pipeline_cls in zip(manager.pipelines, pipeline_classes):
             self.assertEqual(pipeline, pipeline_cls.return_value)
-
-    def test_process(self):
-        pass
 
     ############################
     # Test preparing processes #

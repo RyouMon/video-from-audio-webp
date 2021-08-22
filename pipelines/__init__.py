@@ -15,13 +15,15 @@ class PipelineManager:
         self.workspace = TemporaryDirectory()
 
     @classmethod
-    def from_settings(cls, settings):
+    def from_settings(cls, settings, parser):
         """Use settings module create PipelineManager instance"""
         pipelines = []
 
         pipeline_paths = settings.PIPELINES
         for cls_path in pipeline_paths:
             pipeline_cls = load_object(cls_path)
+            if hasattr(pipeline_cls, 'add_arguments'):
+                pipeline_cls.add_arguments(parser)
             pipelines.append(pipeline_cls(settings))
 
         return cls(*pipelines, settings=settings)
