@@ -1,7 +1,7 @@
 from pipelines import Pipeline
 
 
-class ContinuousTextPipeline(Pipeline):
+class DoubleTitlePipeline(Pipeline):
 
     def process(self, infile, outfile, context):
         video = self.input(infile)
@@ -11,6 +11,10 @@ class ContinuousTextPipeline(Pipeline):
             video = video.drawtext(text=text, fontfile=font, fontcolor=color, fontsize=size, x=x, y=y)
 
         return self.output(video, audio, outfile), context
+
+    @classmethod
+    def add_arguments(cls, parser):
+        parser.add_argument('-T', '--titles', help="Video titles", nargs=2)
 
 
 class SubtitlePipeline(Pipeline):

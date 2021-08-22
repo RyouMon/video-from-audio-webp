@@ -4,7 +4,7 @@ PIPELINES = [
     'pipelines.background.SocialMediaBlackBackgroundPipeline',
     'pipelines.slideshow.SlideShowPipeline',
     'pipelines.masking.MaskingPipeline',
-    'pipelines.text.ContinuousTextPipeline',
+    'pipelines.text.DoubleTitlePipeline',
     'pipelines.text.SubtitlePipeline',
 ]
 
