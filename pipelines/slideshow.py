@@ -10,10 +10,14 @@ class SlideShowPipeline(Pipeline):
         video = self.input(infile)
         audio = video.audio
 
-        for timestamps, filename in slideshows:
+        size = len(slideshows)
+        for i, ((start, end), filename) in enumerate(slideshows):
             image = ffmpeg.input(filename)
             image = image.filter('scale', w=1080, h=-1)
-            video = video.overlay(image, y=600, enable=f'gt(t,{timestamps[0]})')
+            if i < (size - 1):
+                video = video.overlay(image, y=600, enable=f'between(t,{start},{slideshows[i+1][0][0]})')
+            else:
+                video = video.overlay(image, y=600, enable=f'gt(t,{start})')
 
         return self.output(video, audio, outfile), context
 
