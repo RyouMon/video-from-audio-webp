@@ -34,33 +34,32 @@ class PipelineManager:
             out, _ = self.pipelines[0].process(infile, outfile, context)
             return [out]
 
-        processes = []
+        output_streams = []
 
         out, context = self.pipelines[0].process(infile, join(workspace, 'step1.mp4'), context)
-        processes.append(out)
+        output_streams.append(out)
 
         for i, pipeline in enumerate(self.pipelines[1:-1]):
             out, context = pipeline.process(join(workspace, f'step{i+1}.mp4'), join(workspace, f'step{i+2}.mp4'), context)
-            processes.append(out)
+            output_streams.append(out)
 
         out, _ = self.pipelines[-1].process(join(workspace, f'step{self._size-1}.mp4'), outfile, context)
-        processes.append(out)
+        output_streams.append(out)
 
-        return processes
+        return output_streams
 
-    def _run_processes(self, *processes, quiet):
+    def _run_processes(self, *output_streams, quiet):
         """call run_async() on each output process"""
-        if self._size == 1:
-            return [processes[0].run_async(quiet=quiet)]
+        code = 0
 
-        subprocesses = [processes[0].run_async(pipe_stdout=True, quiet=quiet)]
+        for stream in output_streams:
+            process = stream.run_async(quiet=quiet)
 
-        for process in processes[1:-1]:
-            subprocesses.append(process.run_async(pipe_stdin=True, pipe_stdout=True, quiet=quiet))
+            if process.wait():
+                code = process.returncode
+                break
 
-        subprocesses.append(processes[-1].run_async(pipe_stdin=True, quiet=quiet))
-
-        return subprocesses
+        return code
 
     def process(self, infile, outfile, context=None):
 
@@ -68,11 +67,8 @@ class PipelineManager:
             context = {}
         context['infile'] = infile
 
-        output_processes = self._prepare_processes(infile, outfile, context)
-        subprocesses = self._run_processes(*output_processes, quiet=not self.debug)
-        out, err = self._connect_processes(*subprocesses)
-        code = self._wait_processes(*subprocesses)
-        return code, out, err
+        output_streams = self._prepare_processes(infile, outfile, context)
+        return self._run_processes(*output_streams, quiet=not self.debug)
 
     def __del__(self):
         self.workspace.cleanup()

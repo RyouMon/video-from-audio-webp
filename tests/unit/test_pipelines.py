@@ -18,15 +18,12 @@ class PipelineManagerTest(TestCase):
         return pipeline_list
 
     @staticmethod
-    def prepare_n_subprocess_mocks(n):
-        subprocesses = [MagicMock() for _ in range(n)]
-        for i, subprocess in enumerate(subprocesses):
-            subprocess.communicate.return_value = f'out{i}', f'err{i}'
-        return subprocesses
-
-    @staticmethod
-    def prepare_n_mocks(n):
-        return [MagicMock() for _ in range(n)]
+    def prepare_output_stream_mocks(n):
+        mocks = [MagicMock() for _ in range(n)]
+        for mock in mocks:
+            mock.run_async.return_value.wait.return_value = 0
+            mock.run_async.return_value.returncode = 0
+        return mocks
 
     @staticmethod
     def get_mock_settings(debug=True):
@@ -121,45 +118,29 @@ class PipelineManagerTest(TestCase):
     # Test running processes #
     ##########################
 
-    def test_run_one_process(self):
-        processes = self.prepare_n_mocks(1)
-        manager = pipelines.PipelineManager(*self.prepare_n_pipeline_mocks(1), settings=self.get_mock_settings())
-
-        subprocesses = manager._run_processes(*processes, quiet=True)
-
-        self.assertEqual(subprocesses, [process.run_async.return_value for process in processes])
-        processes[0].run_async.assert_called_once_with(quiet=True)
-
-    def test_run_two_processes(self):
-        processes = self.prepare_n_mocks(2)
-        manager = pipelines.PipelineManager(*self.prepare_n_pipeline_mocks(2), settings=self.get_mock_settings())
-
-        subprocesses = manager._run_processes(*processes, quiet=True)
-
-        self.assertEqual(subprocesses, [process.run_async.return_value for process in processes])
-        processes[0].run_async.assert_called_once_with(pipe_stdout=True, quiet=True)
-        processes[1].run_async.assert_called_once_with(pipe_stdin=True, quiet=True)
-
-    def test_run_three_processes(self):
-        processes = self.prepare_n_mocks(3)
+    def test_run_process_return_0(self):
+        output_streams = self.prepare_output_stream_mocks(3)
         manager = pipelines.PipelineManager(*self.prepare_n_pipeline_mocks(3), settings=self.get_mock_settings())
 
-        subprocesses = manager._run_processes(*processes, quiet=True)
+        code = manager._run_processes(*output_streams, quiet=True)
 
-        self.assertEqual(subprocesses, [process.run_async.return_value for process in processes])
-        processes[0].run_async.assert_called_once_with(pipe_stdout=True, quiet=True)
-        processes[1].run_async.assert_called_once_with(pipe_stdin=True, pipe_stdout=True, quiet=True)
-        processes[2].run_async.assert_called_once_with(pipe_stdin=True, quiet=True)
+        self.assertEqual(code, 0)
+        for process in output_streams:
+            process.run_async.assert_called_once_with(quiet=True)
+            process.run_async.return_value.wait.assert_called_once()
 
-    def test_run_ten_processes(self):
-        processes = self.prepare_n_mocks(10)
-        manager = pipelines.PipelineManager(*self.prepare_n_pipeline_mocks(10), settings=self.get_mock_settings())
+    def test_run_process_return_1(self):
+        output_streams = self.prepare_output_stream_mocks(3)
+        output_streams[0].run_async.return_value.wait.return_value = 1
+        output_streams[0].run_async.return_value.returncode = 1
+        manager = pipelines.PipelineManager(*self.prepare_n_pipeline_mocks(3), settings=self.get_mock_settings())
 
-        subprocesses = manager._run_processes(*processes, quiet=True)
+        code = manager._run_processes(*output_streams, quiet=True)
 
-        self.assertEqual(subprocesses, [process.run_async.return_value for process in processes])
-        processes[0].run_async.assert_called_once_with(pipe_stdout=True, quiet=True)
-        processes[-1].run_async.assert_called_once_with(pipe_stdin=True, quiet=True)
+        self.assertEqual(code, 1)
+        output_streams[0].run_async.assert_called_once_with(quiet=True)
+        output_streams[0].run_async.return_value.wait.return_value = 1
 
-        for process in processes[1:-1]:
-            process.run_async.assert_called_once_with(pipe_stdin=True, pipe_stdout=True, quiet=True)
+        for process in output_streams[1:]:
+            process.run_async.assert_not_called()
+            process.run_async.return_value.wait.assert_not_called()
