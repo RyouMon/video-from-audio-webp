@@ -22,7 +22,7 @@ class SlideShowPipeline(Pipeline):
         return self.output(video, audio, outfile), context
 
     def clean_slideshows(self, context):
-        slideshows = context.get('slideshows')
+        slideshows = context.slideshows
 
         if not slideshows:
             raise ValueError('You must set "slideshows" in context!')
