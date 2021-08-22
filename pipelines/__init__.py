@@ -1,5 +1,7 @@
 import logging
 import ffmpeg
+from os.path import join
+from tempfile import TemporaryDirectory
 from utils.misc import load_object
 
 
@@ -10,6 +12,7 @@ class PipelineManager:
         self.settings = settings
         self.debug = settings.DEBUG
         self._size = len(pipelines)
+        self.workspace = TemporaryDirectory()
 
     @classmethod
     def from_settings(cls, settings):
@@ -25,20 +28,22 @@ class PipelineManager:
 
     def _prepare_processes(self, infile, outfile, context):
         """call process on each pipeline"""
+        workspace = self.workspace.name
+
         if self._size == 1:
             out, _ = self.pipelines[0].process(infile, outfile, context)
             return [out]
 
         processes = []
 
-        out, context = self.pipelines[0].process(infile, 'pipe:', context)
+        out, context = self.pipelines[0].process(infile, join(workspace, 'step1.mp4'), context)
         processes.append(out)
 
-        for pipeline in self.pipelines[1:-1]:
-            out, context = pipeline.process('pipe:', 'pipe:', context)
+        for i, pipeline in enumerate(self.pipelines[1:-1]):
+            out, context = pipeline.process(join(workspace, f'step{i+1}.mp4'), join(workspace, f'step{i+2}.mp4'), context)
             processes.append(out)
 
-        out, _ = self.pipelines[-1].process('pipe:', outfile, context)
+        out, _ = self.pipelines[-1].process(join(workspace, f'step{self._size-1}.mp4'), outfile, context)
         processes.append(out)
 
         return processes
@@ -57,28 +62,6 @@ class PipelineManager:
 
         return subprocesses
 
-    def _connect_processes(self, *subprocesses):
-        """communicate between processes"""
-        out, err = subprocesses[0].communicate()
-        if self._size == 1:
-            return out, err
-
-        for process in subprocesses[1:-1]:
-            out, err = process.communicate(input=out)
-
-        return subprocesses[-1].communicate(input=out)
-
-    def _wait_processes(self, *subprocesses):
-        """wait subprocesses terminate"""
-        code = subprocesses[0].wait()
-
-        if self._size == 1:
-            return code
-
-        for subprocess in subprocesses[1:]:
-            subprocess.stdin.close()
-            subprocess.wait()
-
     def process(self, infile, outfile, context=None):
 
         if context is None:
@@ -90,6 +73,9 @@ class PipelineManager:
         out, err = self._connect_processes(*subprocesses)
         code = self._wait_processes(*subprocesses)
         return code, out, err
+
+    def __del__(self):
+        self.workspace.cleanup()
 
 
 class Pipeline:

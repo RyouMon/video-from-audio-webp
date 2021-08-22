@@ -1,3 +1,4 @@
+from os.path import join
 from unittest import TestCase
 from unittest.mock import MagicMock, patch, call
 import pipelines
@@ -62,7 +63,8 @@ class PipelineManagerTest(TestCase):
     # Test preparing processes #
     ############################
 
-    def test_prepare_processes_when_have_one_pipeline(self):
+    @patch('pipelines.TemporaryDirectory')
+    def test_prepare_processes_when_have_one_pipeline(self, mock_dir):
         pipeline_list = self.prepare_n_pipeline_mocks(1)
         manager = pipelines.PipelineManager(*pipeline_list, settings=self.get_mock_settings())
 
@@ -71,39 +73,49 @@ class PipelineManagerTest(TestCase):
         self.assertEqual(processes[0], 'output1')
         pipeline_list[0].process.assert_called_once_with('infile', 'outfile', 'context0')
 
-    def test_prepare_processes_when_have_two_pipelines(self):
+    @patch('pipelines.TemporaryDirectory')
+    def test_prepare_processes_when_have_two_pipelines(self, mock_dir):
+        mock_dir().name = 'temp'
         pipeline_list = self.prepare_n_pipeline_mocks(2)
         manager = pipelines.PipelineManager(*pipeline_list, settings=self.get_mock_settings())
 
         processes = manager._prepare_processes('infile', 'outfile', 'context0')
 
         self.assert_manager_processes_has_output(processes)
-        pipeline_list[0].process.assert_called_once_with('infile', 'pipe:', 'context0')
-        pipeline_list[1].process.assert_called_once_with('pipe:', 'outfile', 'context1')
+        pipeline_list[0].process.assert_called_once_with('infile', join('temp', 'step1.mp4'), 'context0')
+        pipeline_list[1].process.assert_called_once_with(join('temp', 'step1.mp4'), 'outfile', 'context1')
 
-    def test_prepare_processes_when_have_three_pipelines(self):
+    @patch('pipelines.TemporaryDirectory')
+    def test_prepare_processes_when_have_three_pipelines(self, mock_dir):
+        mock_dir().name = 'temp'
         pipeline_list = self.prepare_n_pipeline_mocks(3)
         manager = pipelines.PipelineManager(*pipeline_list, settings=self.get_mock_settings())
 
         processes = manager._prepare_processes('infile', 'outfile', 'context0')
 
         self.assert_manager_processes_has_output(processes)
-        pipeline_list[0].process.assert_called_once_with('infile', 'pipe:', 'context0')
-        pipeline_list[1].process.assert_called_once_with('pipe:', 'pipe:', 'context1')
-        pipeline_list[2].process.assert_called_once_with('pipe:', 'outfile', 'context2')
+        pipeline_list[0].process.assert_called_once_with('infile', join('temp', 'step1.mp4'), 'context0')
+        pipeline_list[1].process.assert_called_once_with(join('temp', 'step1.mp4'), join('temp', 'step2.mp4'), 'context1')
+        pipeline_list[2].process.assert_called_once_with(join('temp', 'step2.mp4'), 'outfile', 'context2')
 
-    def test_prepare_processes_when_have_ten_pipelines(self):
+    @patch('pipelines.TemporaryDirectory')
+    def test_prepare_processes_when_have_ten_pipelines(self, mock_dir):
+        mock_dir().name = 'temp'
         pipeline_list = self.prepare_n_pipeline_mocks(10)
         manager = pipelines.PipelineManager(*pipeline_list, settings=self.get_mock_settings())
 
         processes = manager._prepare_processes('infile', 'outfile', 'context0')
 
         self.assert_manager_processes_has_output(processes)
-        pipeline_list[0].process.assert_called_once_with('infile', 'pipe:', 'context0')
-        pipeline_list[-1].process.assert_called_once_with('pipe:', 'outfile', 'context9')
+        pipeline_list[0].process.assert_called_once_with('infile', join('temp', 'step1.mp4'), 'context0')
+        pipeline_list[-1].process.assert_called_once_with(join('temp', 'step9.mp4'), 'outfile', 'context9')
 
         for i, pipeline in enumerate(pipeline_list[1:-1]):
-            pipeline.process.assert_called_once_with('pipe:', 'pipe:', f'context{i+1}')
+            pipeline.process.assert_called_once_with(
+                join('temp', f'step{i+1}.mp4'),
+                join('temp', f'step{i+2}.mp4'),
+                f'context{i+1}'
+            )
 
     ##########################
     # Test running processes #
@@ -151,87 +163,3 @@ class PipelineManagerTest(TestCase):
 
         for process in processes[1:-1]:
             process.run_async.assert_called_once_with(pipe_stdin=True, pipe_stdout=True, quiet=True)
-
-    ################################
-    # Test processes communication #
-    ################################
-
-    def test_connect_one_process(self):
-        processes = self.prepare_n_subprocess_mocks(1)
-        manager = pipelines.PipelineManager(*self.prepare_n_pipeline_mocks(1), settings=self.get_mock_settings())
-
-        out, err = manager._connect_processes(*processes)
-
-        self.assertEqual(out, 'out0')
-        self.assertEqual(err, 'err0')
-        processes[0].communicate.assert_called_once_with()
-
-    def test_connect_two_processes(self):
-        processes = self.prepare_n_subprocess_mocks(2)
-        manager = pipelines.PipelineManager(*self.prepare_n_pipeline_mocks(2), settings=self.get_mock_settings())
-
-        out, err = manager._connect_processes(*processes)
-
-        self.assertEqual(out, 'out1')
-        self.assertEqual(err, 'err1')
-        processes[0].communicate.assert_called_once_with()
-        processes[1].communicate.assert_called_once_with(input='out0')
-
-    def test_connect_three_processes(self):
-        processes = self.prepare_n_subprocess_mocks(3)
-        manager = pipelines.PipelineManager(*self.prepare_n_pipeline_mocks(3), settings=self.get_mock_settings())
-
-        out, err = manager._connect_processes(*processes)
-
-        self.assertEqual(out, 'out2')
-        self.assertEqual(err, 'err2')
-        processes[0].communicate.assert_called_once_with()
-        processes[1].communicate.assert_called_once_with(input='out0')
-        processes[2].communicate.assert_called_once_with(input='out1')
-
-    def test_connect_ten_processes(self):
-        processes = self.prepare_n_subprocess_mocks(10)
-        manager = pipelines.PipelineManager(*self.prepare_n_pipeline_mocks(10), settings=self.get_mock_settings())
-
-        out, err = manager._connect_processes(*processes)
-
-        self.assertEqual(out, 'out9')
-        self.assertEqual(err, 'err9')
-        processes[0].communicate.assert_called_once_with()
-
-        for i, process in enumerate(processes[1:]):
-            process.communicate.assert_called_once_with(input=f'out{i}')
-
-    ##########################
-    # Test waiting processes #
-    ##########################
-
-    def test_wait_one_process(self):
-        processes = self.prepare_n_subprocess_mocks(1)
-        manager = pipelines.PipelineManager(*self.prepare_n_pipeline_mocks(1), settings=self.get_mock_settings())
-
-        code = manager._wait_processes(*processes)
-
-        self.assertEqual(code, processes[0].wait.return_value)
-        processes[0].wait.assert_called_once_with()
-
-    def test_wait_two_processes(self):
-        processes = self.prepare_n_subprocess_mocks(2)
-        manager = pipelines.PipelineManager(*self.prepare_n_pipeline_mocks(2), settings=self.get_mock_settings())
-
-        code = manager._wait_processes(*processes)
-
-        processes[0].wait.assert_called_once_with()
-        processes[1].wait.assert_called_once_with()
-        processes[1].stdin.close.assert_called_once_with()
-
-    def test_wait_ten_processes(self):
-        processes = self.prepare_n_subprocess_mocks(10)
-        manager = pipelines.PipelineManager(*self.prepare_n_pipeline_mocks(10), settings=self.get_mock_settings())
-
-        code = manager._wait_processes(*processes)
-
-        processes[0].wait.assert_called_once_with()
-        for process in processes[1:]:
-            process.wait.assert_called_once_with()
-            process.stdin.close.assert_called_once_with()
