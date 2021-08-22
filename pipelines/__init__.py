@@ -63,12 +63,14 @@ class PipelineManager:
 
         return code
 
-    def process(self, infile, outfile, context=None):
-
-        if context is None:
-            context = {}
-        context['infile'] = infile
-
+    def process(self, infile, outfile, context):
+        """
+        using pipelines process input file, save to outfile
+        :param infile: input filename
+        :param outfile: output filename
+        :param context: a NameSpace object
+        :return: return code
+        """
         output_streams = self._prepare_processes(infile, outfile, context)
         return self._run_processes(*output_streams, quiet=not self.debug)
 
