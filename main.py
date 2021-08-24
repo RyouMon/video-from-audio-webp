@@ -21,14 +21,14 @@ def main():
     workspace = TemporaryDirectory()
 
     try:
-        raw_subtitles = generators.generate_subtitles(args.source_path)
+        raw_subtitles = generators.generate_subtitles(args.source_path, concurrency=2)
 
         srt_filename = uuid4().hex[:6] + '.srt'
         with open(srt_filename, 'wb') as f:
             srt_file = generators.generate_srt(raw_subtitles)
             f.write(srt_file.encode('utf-8'))
 
-        slideshows = generators.generate_slideshows(raw_subtitles, save_to=workspace.name)
+        slideshows = generators.generate_slideshows(raw_subtitles, save_to=workspace.name, concurrency=2)
 
         args.srt_file = srt_filename
         args.force_style = 'MarginV=35'
