@@ -1,2 +1,10 @@
 # video-from-audio-webp
-Auto making video from an audio and web pictures. 使用一段音频和互联网图片自动生成视频。
+
+计划输入一段音频，自动生成字幕并根据字幕配图，最终合成一个视频，目前基本可以成片，但效果不理想，图片配的非常不准确。
+
+实现时将视频处理的每个步骤写成一个可插拔的流水线类，方便以后更改需求。
+
+参考资料：
+- Scrapy 的 PipelineManager 类
+- Django 的 BaseCommand 类
+- [Automatically making YouTube videos with Google Images](https://www.youtube.com/watch?v=Jr9sptoLvJU)
