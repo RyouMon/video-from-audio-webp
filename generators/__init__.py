@@ -5,12 +5,12 @@ from progressbar import ProgressBar, Percentage, Bar, ETA
 from settings import *
 
 
-def generate_subtitles(filename):
+def generate_subtitles(filename, concurrency=1):
     """
     generate subtitle from media file
     """
     return autosubb.generate_subtitles(
-        source_path=filename, app_id=APP_ID, api_key=API_KEY, secret_key=SECRET_KEY, concurrency=1,
+        source_path=filename, app_id=APP_ID, api_key=API_KEY, secret_key=SECRET_KEY, concurrency=concurrency,
         dev_pid='80001',
     )
 
