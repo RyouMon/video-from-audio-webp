@@ -4,10 +4,10 @@ from uuid import uuid4
 import logging.config
 from tempfile import TemporaryDirectory
 
-import generators
 import settings
 from pipelines import PipelineManager
 from utils.cmd import parser, validate
+from utils import generators
 
 
 def main():
